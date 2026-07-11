@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<title>超市进货数据中心</title>
+<meta name="theme-color" content="#1F4D3F">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="app-shell">
+
+  <!-- ===== 顶部栏 ===== -->
+  <header class="topbar">
+    <div class="topbar-brand">
+      <span class="topbar-mark">超市</span>
+      <div class="topbar-title">
+        <h1>进货数据中心</h1>
+        <p id="connStatus" class="conn-status conn-status--unknown">未连接</p>
+      </div>
+    </div>
+    <button id="btnSettings" class="icon-btn" aria-label="设置" title="设置">⚙️</button>
+  </header>
+
+  <!-- ===== 主内容区 ===== -->
+  <main class="content">
+
+    <!-- ---- 上传发票 ---- -->
+    <section id="view-upload" class="view">
+      <div class="section-head">
+        <h2>上传发票 / 单据</h2>
+        <p class="section-sub">拍照，或从相册 / 文件中选择。支持图片、PDF、Word、Excel、CSV。</p>
+      </div>
+
+      <div class="capture-row">
+        <label class="capture-btn capture-btn--primary">
+          <input type="file" id="cameraInput" accept="image/*" capture="environment" hidden>
+          📷 <span>拍照上传</span>
+        </label>
+        <label class="capture-btn">
+          <input type="file" id="fileInput" accept="image/*,application/pdf,.doc,.docx,.xls,.xlsx,.csv" multiple hidden>
+          📁 <span>选择文件</span>
+        </label>
+      </div>
+
+      <ul id="pendingList" class="pending-list"></ul>
+
+      <button id="btnUpload" class="btn btn-block btn-primary" disabled>上传并识别</button>
+
+      <div id="uploadProgress" class="progress-box hidden">
+        <div class="spinner"></div>
+        <p id="uploadProgressText">正在上传…</p>
+      </div>
+
+      <div id="uploadResult" class="result-box hidden"></div>
+    </section>
+
+    <!-- ---- 人工核对 ---- -->
+    <section id="view-review" class="view hidden">
+      <div class="section-head">
+        <h2>人工核对</h2>
+        <p class="section-sub">可修改「购买数量」和「进货单价」，总成本会自动重算。</p>
+      </div>
+
+      <div class="filter-tabs" id="filterTabs">
+        <button class="filter-tab is-active" data-mode="flagged">⚠️ 疑似有误</button>
+        <button class="filter-tab" data-mode="recent">🕓 最近上传</button>
+        <button class="filter-tab" data-mode="all">📋 全部</button>
+      </div>
+
+      <div id="reviewList" class="review-list"></div>
+      <div id="reviewEmpty" class="empty-state hidden">
+        <p>这里空空如也 ✨</p>
+      </div>
+      <div id="reviewLoading" class="progress-box hidden">
+        <div class="spinner"></div>
+        <p>正在读取…</p>
+      </div>
+      <button id="btnRefreshReview" class="btn btn-block btn-ghost">🔄 刷新</button>
+    </section>
+
+  </main>
+
+  <!-- ===== 底部导航 ===== -->
+  <nav class="tabbar">
+    <button class="tab-item is-active" data-view="upload">
+      <span class="tab-icon">⬆️</span><span>上传</span>
+    </button>
+    <button class="tab-item" data-view="review">
+      <span class="tab-icon">📝</span><span>核对</span>
+    </button>
+  </nav>
+
+</div>
+
+<!-- ===== 设置弹层 ===== -->
+<div id="settingsSheet" class="sheet hidden">
+  <div class="sheet-backdrop" id="settingsBackdrop"></div>
+  <div class="sheet-panel">
+    <div class="sheet-handle"></div>
+    <h3>连接设置</h3>
+    <p class="sheet-hint">粘贴你部署 Apps Script 网页应用后得到的 <code>/exec</code> 网址。</p>
+    <input id="webAppUrlInput" class="text-input" type="url" placeholder="https://script.google.com/macros/s/xxxx/exec" autocomplete="off" autocapitalize="off" spellcheck="false">
+    <div class="sheet-actions">
+      <button id="btnTestConn" class="btn btn-ghost">测试连接</button>
+      <button id="btnSaveSettings" class="btn btn-primary">保存</button>
+    </div>
+    <p id="settingsMsg" class="sheet-msg"></p>
+  </div>
+</div>
+
+<!-- ===== Toast ===== -->
+<div id="toast" class="toast hidden"></div>
+
+<script src="app.js"></script>
+</body>
+</html>
