@@ -290,14 +290,18 @@
 
   function renderReviewCards(rows, mode) {
     var listEl = $('#reviewList');
+    var approveBtn = $('#btnApproveAll');
     if (!rows || rows.length === 0) {
       listEl.innerHTML = '';
       $('#reviewEmpty').classList.remove('hidden');
+      approveBtn.classList.add('hidden');
       return;
     }
     $('#reviewEmpty').classList.add('hidden');
     listEl.innerHTML = rows.map(cardTemplate).join('');
     bindCardEvents();
+    approveBtn.classList.remove('hidden');
+    $('#approveAllCount').textContent = rows.length;
   }
 
   function cardTemplate(r) {
@@ -381,6 +385,63 @@
       });
     });
   }
+
+  $('#btnApproveAll').addEventListener('click', function () {
+    var cards = $all('.item-card');
+    if (cards.length === 0) return;
+
+    var confirmed = window.confirm(
+      '确认把当前显示的这 ' + cards.length + ' 条记录全部标记为「已人工核对」吗？\n' +
+      '会保存每条卡片当前显示的购买数量和进货单价。'
+    );
+    if (!confirmed) return;
+
+    var items = cards.map(function (card) {
+      var qtyInput = card.querySelector('.qty-input');
+      var costInput = card.querySelector('.cost-input');
+      return {
+        recordId: card.getAttribute('data-record-id'),
+        qty: qtyInput.value === '' ? null : parseFloat(qtyInput.value),
+        unitCost: costInput.value === '' ? null : parseFloat(costInput.value)
+      };
+    });
+
+    var btn = $('#btnApproveAll');
+    btn.disabled = true;
+    var originalText = btn.innerHTML;
+    btn.textContent = '正在保存…';
+
+    callApi('batchUpdateItems', { items: items })
+      .then(function (resp) {
+        var updatedMap = {};
+        (resp.updated || []).forEach(function (u) { updatedMap[u.recordId] = u; });
+
+        cards.forEach(function (card) {
+          var recordId = card.getAttribute('data-record-id');
+          var u = updatedMap[recordId];
+          if (!u) return;
+          card.querySelector('.total-display').textContent = money(u.cost);
+          var badge = card.querySelector('.badge');
+          badge.textContent = u.auditStatus;
+          badge.className = 'badge badge--ok';
+          card.classList.remove('is-flagged');
+          card.classList.add('is-reviewed');
+          var saveBtn = card.querySelector('.save-btn');
+          saveBtn.disabled = true;
+          saveBtn.textContent = '✓ 已保存';
+          saveBtn.classList.add('is-saved');
+        });
+
+        toast('已批量核对 ' + (resp.updated || []).length + ' 条');
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+      })
+      .catch(function (err) {
+        toast('批量核对失败：' + err.message, true);
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+      });
+  });
 
   // ============ 初始化 ============
   checkConnection();
