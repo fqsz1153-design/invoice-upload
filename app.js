@@ -234,11 +234,26 @@
     if (result.skippedFiles && result.skippedFiles.length > 0) {
       lines.push('<p>跳过 ' + result.skippedFiles.length + ' 个文件：' + escapeHtml(result.skippedFiles.join('、')) + '</p>');
     }
+    if (result.hasMore) {
+      lines.push('<p>⏳ 文件夹里还有没处理完的文件（单次处理数量有上限，避免超时），点下面按钮继续处理剩余的。</p>');
+      lines.push('<button class="go-review" id="btnContinueProcess">继续处理剩余文件 →</button>');
+    }
     if ((result.newRecords || []).length > 0) {
       lines.push('<button class="go-review" id="btnGoReview">去人工核对 →</button>');
     }
     box.innerHTML = lines.join('');
     box.classList.remove('hidden');
+
+    var continueBtn = $('#btnContinueProcess');
+    if (continueBtn) {
+      continueBtn.addEventListener('click', function () {
+        continueBtn.disabled = true;
+        continueBtn.textContent = '正在处理…';
+        callApi('runProcess')
+          .then(function (resp) { showUploadResult(resp.result); })
+          .catch(function (err) { toast('处理失败：' + err.message, true); continueBtn.disabled = false; continueBtn.textContent = '继续处理剩余文件 →'; });
+      });
+    }
 
     var btn = $('#btnGoReview');
     if (btn) {
